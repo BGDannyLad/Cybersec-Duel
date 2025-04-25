@@ -1,8 +1,8 @@
 import socket
 import threading
 import os  # <-- dangerous
-
-HOST = '0.0.0.0'
+#Dont run this in a bad spot, people can execute commands on your machine remotely without checking for permissions.
+HOST = '0.0.0.0'#ports that it accepts
 PORT = 8888
 print("Listening on:", socket.gethostbyname(socket.gethostname()))
 def handle_client(conn, addr):

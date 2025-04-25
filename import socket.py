@@ -1,7 +1,7 @@
 import socket
 
 # Target info
-TARGET_IP = '10.76.4.212'
+TARGET_IP = '' #add ip here
 TARGET_PORT = 8888
 
 def connect():
