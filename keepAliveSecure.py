@@ -14,36 +14,20 @@ def log_event(msg):
     with open("keepalive.log", "a") as f:
         f.write(f"[LOG] {time.ctime()} - {msg}\n")
 
-def vulnerable_copy(user_input):
-    """
-    Simulated vulnerable function: copies user input into a small fixed-size buffer.
-    """
-    buffer_size = 32  # Small fixed buffer (like C-style)
-    buffer = bytearray(buffer_size)
-
-    for i in range(len(user_input)):
-        # NO bounds checking here - classic overflow style
-        buffer[i] = user_input[i]
-
-    return buffer
-
 def handle_client(conn, addr):
     global command_count
     print(f"[+] Connection from {addr}")
     log_event(f"Connected from {addr}")
     try:
         while True:
-            conn.sendall(b"alive\n")
-            data = conn.recv(1024)  # Wait for data from the client
+            data = conn.recv(1024)  # First wait for client
             if not data:
                 break
-
-            # Vulnerable part: copy the raw bytes into a fixed buffer
-            vulnerable_copy(data)  # <-- Simulates overflow
 
             command = data.decode().strip()
             command_count += 1  # Increment command count
 
+            # Only allow predefined commands
             if command == "ping":
                 conn.sendall(b"pong\n")
             elif command == "status":
@@ -53,7 +37,8 @@ def handle_client(conn, addr):
             else:
                 conn.sendall(b"Unknown command\n")
 
-            # Flushing not needed — remove conn.flush()
+            # After replying to command, now send alive
+            conn.sendall(b"alive\n")
 
     except Exception as e:
         log_event(f"Error: {e}")
@@ -71,10 +56,11 @@ def main():
 
     while True:
         conn, addr = server.accept()
-        connection_count += 1
+        connection_count += 1  # Increment connection count
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
 
+        # Periodically print the performance stats (every 100 connections)
         if connection_count % 100 == 0:
             elapsed_time = time.time() - start_time
             print(f"[+] Connections: {connection_count}, Commands Processed: {command_count}, Time Elapsed: {elapsed_time:.2f}s")
